@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JS-MarkItDown | Convertitore Universale in Markdown</title>
+  
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 2rem 1rem;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2rem; }
+    header h1 { font-size: 2.2rem; font-weight: 800; color: #1e293b; margin-bottom: 0.5rem; }
+    header p { color: var(--text-muted); font-size: 1rem; }
+
+    /* Dropzone */
+    .dropzone {
+      border: 2px dashed #94a3b8;
+      border-radius: 12px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      background: var(--card-bg);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .dropzone.dragover { border-color: var(--primary); background-color: #eff6ff; }
+    .dropzone input { display: none; }
+    .dropzone-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .dropzone-text { font-weight: 600; color: #334155; font-size: 1.1rem; }
+    .dropzone-subtext { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem; }
+
+    /* Status Bar */
+    #status {
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: center;
+      min-height: 1.5rem;
+    }
+    .status-ok { color: #16a34a; }
+    .status-err { color: #dc2626; }
+    .status-loading { color: #2563eb; }
+
+    /* Output Section */
+    .output-section {
+      margin-top: 2rem;
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.25rem;
+      background: #f1f5f9;
+      border-bottom: 1px solid var(--border);
+    }
+    .tabs { display: flex; gap: 0.5rem; }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    .tab-btn.active { background: #ffffff; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .actions { display: flex; gap: 0.5rem; }
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: var(--primary-hover); }
+
+    .tab-content { padding: 1.25rem; }
+    #markdown-raw {
+      width: 100%;
+      height: 500px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: "SFMono-Regular", Consolas, Monaco, monospace;
+      font-size: 0.88rem;
+      resize: vertical;
+      outline: none;
+      background: #fafafa;
+      line-height: 1.4;
+      white-space: pre;
+    }
+    #markdown-preview {
+      display: none;
+      min-height: 500px;
+      max-height: 700px;
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #ffffff;
+      overflow: auto;
+    }
+
+    /* Stili Tabelle Markdown */
+    #markdown-preview h1 { font-size: 1.5rem; margin-bottom: 1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.3rem; }
+    #markdown-preview h2 { font-size: 1.25rem; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #1e293b; }
+    #markdown-preview table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.85rem; }
+    #markdown-preview th, #markdown-preview td { border: 1px solid #cbd5e1; padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
+    #markdown-preview th { background-color: #f1f5f9; font-weight: 600; }
+    #markdown-preview tr:nth-child(even) { background-color: #f8fafc; }
+    #markdown-preview pre { background: #f1f5f9; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+  </style>
+
+  <!-- LIBRERIE CDN -->
+  <script src="https://unpkg.com/turndown/dist/turndown.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>MarkItDown JS</h1>
+      <p>Converti qualsiasi foglio di calcolo, documento o presentazione in Markdown strutturato</p>
+    </header>
+
+    <div class="dropzone" id="dropzone">
+      <div class="dropzone-icon">📊</div>
+      <div class="dropzone-text">Trascina qui il file (.xls, .xlsx, .pdf, .docx, .csv, ecc.)</div>
+      <div class="dropzone-subtext">oppure clicca per selezionarlo dal computer</div>
+      <input type="file" id="fileInput" />
+    </div>
+
+    <div id="status"></div>
+
+    <div class="output-section" id="outputSection">
+      <div class="output-header">
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('raw')">Markdown Grezzo</button>
+          <button class="tab-btn" onclick="switchTab('preview')">Anteprima</button>
+        </div>
+        <div class="actions">
+          <button class="btn" onclick="copyMarkdown()">Copia</button>
+          <button class="btn" onclick="downloadMarkdown()">Scarica .md</button>
+        </div>
+      </div>
+      <div class="tab-content">
+        <textarea id="markdown-raw" spellcheck="false"></textarea>
+        <div id="markdown-preview"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
+
+    let currentFileName = "documento";
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const status = document.getElementById('status');
+    const outputSection = document.getElementById('outputSection');
+    const rawTextarea = document.getElementById('markdown-raw');
+    const previewDiv = document.getElementById('markdown-preview');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) handleFile(e.target.files[0]);
+    });
+
+    async function handleFile(file) {
+      status.className = 'status-loading';
+      status.innerText = `Elaborazione di "${file.name}" in corso...`;
+      currentFileName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+      
+      const ext = file.name.split('.').pop().toLowerCase();
+      const arrayBuffer = await file.arrayBuffer();
+      let markdown = "";
+
+      try {
+        switch(ext) {
+          case 'xls':
+          case 'xlsx':
+          case 'xlsm':
+          case 'xlsb':
+          case 'csv':
+            markdown = await convertExcel(arrayBuffer);
+            break;
+          case 'docx':
+            markdown = await convertDocx(arrayBuffer);
+            break;
+          case 'pdf':
+            markdown = await convertPdf(arrayBuffer);
+            break;
+          case 'pptx':
+            markdown = await convertPptx(arrayBuffer);
+            break;
+          case 'html':
+          case 'htm':
+            markdown = await convertHtml(await file.text());
+            break;
+          case 'json':
+            markdown = await convertJson(await file.text());
+            break;
+          case 'xml':
+            markdown = await convertXml(await file.text());
+            break;
+          case 'txt':
+          case 'md':
+            markdown = await file.text();
+            break;
+          default:
+            throw new Error(`Formato .${ext} non supportato.`);
+        }
+
+        displayResult(markdown);
+        status.className = 'status-ok';
+        status.innerText = `File convertito con successo!`;
+      } catch (err) {
+        status.className = 'status-err';
+        status.innerText = `Errore: ${err.message}`;
+        console.error(err);
+      }
+    }
+
+    /* --- CONVERTITORE EXCEL / XLS AD ALTA PRECISIONE --- */
+    async function convertExcel(arrayBuffer) {
+      const data = new Uint8Array(arrayBuffer);
+      const workbook = XLSX.read(data, { 
+        type: 'array',
+        cellDates: true,
+        cellNF: true,
+        cellText: true,
+        raw: false
+      });
+
+      let markdown = `# Workbook: ${currentFileName}\n\n`;
+
+      for (const sheetName of workbook.SheetNames) {
+        markdown += `## Foglio: ${sheetName}\n\n`;
+        const sheet = workbook.Sheets[sheetName];
+
+        if (!sheet) {
+          markdown += `*Foglio vuoto*\n\n`;
+          continue;
+        }
+
+        // 1. Ricalcola le dimensioni reali scansionando tutte le celle presenti
+        let minR = Infinity, maxR = -1, minC = Infinity, maxC = -1;
+        for (let key in sheet) {
+          if (key.startsWith('!')) continue;
+          try {
+            const decoded = XLSX.utils.decode_cell(key);
+            if (decoded.r < minR) minR = decoded.r;
+            if (decoded.r > maxR) maxR = decoded.r;
+            if (decoded.c < minC) minC = decoded.c;
+            if (decoded.c > maxC) maxC = decoded.c;
+          } catch(e) {}
+        }
+
+        if (maxR === -1 || maxC === -1) {
+          markdown += `*Nessun dato trovato nel foglio*\n\n`;
+          continue;
+        }
+
+        // 2. Estrazione riga per riga di tutte le coordinate
+        const rows = [];
+        for (let R = minR; R <= maxR; ++R) {
+          const rowData = [];
+          let isRowBlank = true;
+
+          for (let C = minC; C <= maxC; ++C) {
+            const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+            const cell = sheet[cellAddress];
+            let val = "";
+
+            if (cell !== undefined && cell !== null) {
+              if (cell.w !== undefined && cell.w !== null && String(cell.w).trim() !== "") {
+                val = String(cell.w);
+              } else if (cell.v !== undefined && cell.v !== null) {
+                if (cell.t === 'd' && cell.v instanceof Date) {
+                  val = cell.v.toLocaleDateString();
+                } else {
+                  val = String(cell.v);
+                }
+              }
+            }
+
+            if (val.trim() !== "") {
+              isRowBlank = false;
+            }
+            rowData.push(val);
+          }
+
+          // Includi la riga se non è interamente vuota
+          if (!isRowBlank) {
+            rows.push(rowData);
+          }
+        }
+
+        if (rows.length === 0) {
+          markdown += `*Nessuna riga valida trovata*\n\n`;
+          continue;
+        }
+
+        const totalCols = (maxC - minC) + 1;
+
+        // Pulizia caratteri che corrodono il Markdown
+        const cleanCell = (v) => {
+          if (v === undefined || v === null) return '';
+          return String(v)
+            .replace(/\|/g, '\\|')        // Escape del pipe
+            .replace(/\r?\n/g, '<br>')   // Mantiene i ritorni a capo all'interno della cella
+            .trim();
+        };
+
+        // 3. Generazione tabella Markdown
+        const headerRow = Array.from({ length: totalCols }, (_, i) => {
+          const val = cleanCell(rows[0][i]);
+          return val || `Colonna ${i + 1}`;
+        });
+
+        markdown += '| ' + headerRow.join(' | ') + ' |\n';
+        markdown += '| ' + Array(totalCols).fill('---').join(' | ') + ' |\n';
+
+        for (let r = 1; r < rows.length; r++) {
+          const row = Array.from({ length: totalCols }, (_, i) => cleanCell(rows[r][i]));
+          markdown += '| ' + row.join(' | ') + ' |\n';
+        }
+
+        markdown += `\n*Totale righe estratte per questo foglio: ${rows.length}*\n\n`;
+      }
+
+      return markdown;
+    }
+
+    /* --- ALTRI CONVERTITORI --- */
+    async function convertDocx(arrayBuffer) {
+      const result = await mammoth.convertToHtml({ arrayBuffer });
+      return turndownService.turndown(result.value);
+    }
+
+    async function convertPdf(arrayBuffer) {
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = `# PDF: ${currentFileName}\n\n`;
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        let lastY, pageText = `\n## Pagina ${i}\n\n`;
+        for (let item of textContent.items) {
+          if (lastY !== item.transform[5] && lastY !== undefined) {
+            pageText += '\n';
+          }
+          pageText += item.str + ' ';
+          lastY = item.transform[5];
+        }
+        fullText += pageText + '\n';
+      }
+      return fullText;
+    }
+
+    async function convertPptx(arrayBuffer) {
+      const zip = await JSZip.loadAsync(arrayBuffer);
+      let markdown = `# Presentazione: ${currentFileName}\n\n`;
+
+      const slideFiles = Object.keys(zip.files)
+        .filter(filename => filename.startsWith('ppt/slides/slide') && filename.endsWith('.xml'))
+        .sort((a, b) => {
+          const numA = parseInt(a.match(/\d+/)[0]);
+          const numB = parseInt(b.match(/\d+/)[0]);
+          return numA - numB;
+        });
+
+      for (let i = 0; i < slideFiles.length; i++) {
+        const slideXml = await zip.files[slideFiles[i]].async("text");
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(slideXml, "text/xml");
+        const textNodes = xmlDoc.getElementsByTagName("a:t");
+        let slideText = "";
+        for (let node of textNodes) {
+          slideText += node.textContent + " ";
+        }
+        markdown += `## Slide ${i + 1}\n\n${slideText.trim() || '*Nessun testo*'}\n\n`;
+      }
+      return markdown;
+    }
+
+    async function convertHtml(htmlString) {
+      return turndownService.turndown(htmlString);
+    }
+
+    async function convertJson(jsonString) {
+      try {
+        const parsed = JSON.parse(jsonString);
+        return "```json\n" + JSON.stringify(parsed, null, 2) + "\n```";
+      } catch {
+        return "```json\n" + jsonString + "\n```";
+      }
+    }
+
+    async function convertXml(xmlString) {
+      return "```xml\n" + xmlString + "\n```";
+    }
+
+    /* --- UI & ACTIONS --- */
+    function displayResult(markdown) {
+      rawTextarea.value = markdown;
+      previewDiv.innerHTML = marked.parse(markdown);
+      outputSection.style.display = 'block';
+    }
+
+    function switchTab(tab) {
+      const buttons = document.querySelectorAll('.tab-btn');
+      buttons[0].classList.toggle('active', tab === 'raw');
+      buttons[1].classList.toggle('active', tab === 'preview');
+
+      if (tab === 'raw') {
+        rawTextarea.style.display = 'block';
+        previewDiv.style.display = 'none';
+      } else {
+        rawTextarea.style.display = 'none';
+        previewDiv.style.display = 'block';
+        previewDiv.innerHTML = marked.parse(rawTextarea.value);
+      }
+    }
+
+    function copyMarkdown() {
+      navigator.clipboard.writeText(rawTextarea.value).then(() => {
+        alert("Markdown copiato negli appunti!");
+      });
+    }
+
+    function downloadMarkdown() {
+      const blob = new Blob([rawTextarea.value], { type: 'text/markdown;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${currentFileName}.md`;
+      link.click();
+    }
+  </script>
+</body>
+</html>
