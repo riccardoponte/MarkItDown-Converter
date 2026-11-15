@@ -9,6 +9,7 @@ La versione **1.5.0** introduce l’**OCR automatico di default su tutti i docum
 | Motore OCR locale | **PaddleOCR PP-OCRv6** (`PP-OCRv6_small_det` + `PP-OCRv6_small_rec`) in `_internal\ocr\ppocrv6` (`det.onnx`, `rec.onnx`, `rec_dict.json` con 18.708 caratteri multilingua), zero chiamate di rete. |
 | OCR automatico su PDF (`MarkitDown + OCR.pdf`) | Superato: le pagine puramente fotografiche/illustrative prive di testo vengono filtrate senza rumore, mentre la pagina con il biglietto concerto TicketOne viene estratta automaticamente come `## Pagina 2 *(OCR)*` con ricostruzione geometrica di righe e colonne. |
 | OCR automatico su Office (`.docx`, `.pptx`) | Superato: le immagini incorporate in `word/media/*` e `ppt/media/*` (con associazione automatica al numero di slide) vengono lette via PaddleOCR e aggiunte nella sezione `## Testo OCR da immagini incorporate`. |
+| Unione multi-file in unico `.md` | Superato: l'opzione **Unisci tutti i file in un unico file Markdown (.md)** (con nome file personalizzabile, default `Documenti_uniti.md`) genera un singolo documento Markdown strutturato con indice iniziale e sezioni separate per ogni file importato. |
 | Privacy | Pre-elaborazione, rendering PDF (`pypdfium2`), inferenza ONNX PaddleOCR PP-OCRv6 e ricostruzione layout restano 100% locali; nessun download runtime né API OCR cloud viene usato. |
 
 ## Verifica sul biglietto TicketOne (`MarkitDown + OCR.pdf` — Pagina 2)

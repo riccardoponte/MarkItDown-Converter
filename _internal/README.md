@@ -12,7 +12,7 @@
 | YouTube | Recupera titolo e sottotitoli pubblici, generando righe nel formato `[MM:SS] Testo`. |
 | OCR immagini | Legge localmente PNG, JPG, JPEG, WEBP, BMP, TIF e TIFF con **PaddleOCR (PP-OCRv6)** multilingua incluso nell’app (`_internal\ocr\ppocrv6`); non usa LLM né API esterne né download da Internet. |
 | EXIF | Riporta formato, risoluzione, modalità colore, DPI e, quando presenti, data e dati della fotocamera. |
-| Output | Scrive un file `.md` UTF-8 per ciascun elemento nella cartella scelta. |
+| Output | Scrive un file `.md` UTF-8 per ciascun elemento (modalità 1:1) oppure **unisce tutti i file della coda in un unico file `.md`** con indice automatico se si attiva l'opzione *Unisci tutti i file in un unico file Markdown (.md)*. |
 
 ## Installazione Windows
 

@@ -12,7 +12,7 @@
 | YouTube | Recupera titolo e sottotitoli pubblici, generando righe nel formato `[MM:SS] Testo`. |
 | OCR immagini | Legge localmente PNG, JPG, JPEG, WEBP, BMP, TIF e TIFF con **PaddleOCR (PP-OCRv6)** multilingua incluso nell’app (`_internal\ocr\ppocrv6`); non usa LLM né API esterne né download da Internet. |
 | EXIF | Riporta formato, risoluzione, modalità colore, DPI e, quando presenti, data e dati della fotocamera. |
-| Output | Scrive un file `.md` UTF-8 per ciascun elemento nella cartella scelta. |
+| Output | Scrive un file `.md` UTF-8 per ciascun elemento (modalità 1:1) oppure **unisce tutti i file della coda in un unico file `.md`** con indice automatico se si attiva l'opzione *Unisci tutti i file in un unico file Markdown (.md)*. |
 
 ## Installazione Windows
 
@@ -27,6 +27,7 @@ Apri **MarkItDown Desktop**, scegli una cartella di destinazione, aggiungi uno o
 | Azione | Come procedere |
 |---|---|
 | Convertire documenti (con OCR automatico) | Premi **Scegli file** e aggiungi PDF, Word (`.docx`), PowerPoint (`.pptx`), Excel (`.xlsx`), EPUB o ZIP: il testo nativo e il testo nelle immagini vengono estratti automaticamente tramite PaddleOCR locale. |
+| Unire tutti i file in un unico Markdown | Spunta **Unisci tutti i file in un unico file Markdown (.md)** nelle impostazioni (puoi anche scegliere il nome, di default `Documenti_uniti.md`): tutti i file convertiti vengono raccolti in un solo documento `.md` con indice iniziale. |
 | Convertire un articolo | Premi **Link web / YouTube**, incolla l’URL di una pagina e premi **Aggiungi link**. |
 | Trascrivere un video YouTube | Incolla un URL `youtube.com`, `youtu.be`, `shorts` o `embed`; la lingua selezionata nell’app viene richiesta per prima, con inglese come fallback. |
 | Estrarre testo da un’immagine | Aggiungi PNG, JPG, JPEG, WEBP, BMP o TIFF come un normale file; il risultato contiene una tabella EXIF e la sezione **Testo OCR (PaddleOCR PP-OCRv6 offline)**. |
