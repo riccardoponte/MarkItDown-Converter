@@ -26,8 +26,10 @@ Apri **MarkItDown Desktop**, scegli una cartella di destinazione, aggiungi uno o
 
 | Azione | Come procedere |
 |---|---|
-| Convertire documenti (con OCR automatico) | Premi **Scegli file** e aggiungi PDF, Word (`.docx`), PowerPoint (`.pptx`), Excel (`.xlsx`), EPUB o ZIP: il testo nativo e il testo nelle immagini vengono estratti automaticamente tramite PaddleOCR locale. |
+| Convertire documenti (con OCR automatico) | Premi **Scegli file** oppure **trascina file e cartelle direttamente nella finestra**: PDF, Word (`.docx`), PowerPoint (`.pptx`), Excel (`.xlsx`), EPUB o ZIP vengono convertiti con estrazione automatica del testo nativo e del testo nelle immagini tramite PaddleOCR locale. |
 | Unire tutti i file in un unico Markdown | Spunta **Unisci tutti i file in un unico file Markdown (.md)** nelle impostazioni (puoi anche scegliere il nome, di default `Documenti_uniti.md`): tutti i file convertiti vengono raccolti in un solo documento `.md` con indice iniziale. |
+| Ispezionare o copiare l'anteprima | Clicca su qualsiasi riga completata nella **Coda** per visualizzarne il Markdown nel pannello **Anteprima** (doppio clic per aprire direttamente il file `.md`), oppure premi **Copia** per copiarlo subito negli appunti. |
+| Usare la versione Web Portabile | Apri `Portable MarkItDown.html` in qualsiasi browser moderno (anche da `file://` e senza connessione Internet): include in un unico file HTML monolitico (~60 MB) PDF.js, ONNX Runtime Web e PaddleOCR con OCR automatico su PDF, immagini e Office (`.docx`, `.pptx`, `.xlsx`, `.epub`). |
 | Convertire un articolo | Premi **Link web / YouTube**, incolla l’URL di una pagina e premi **Aggiungi link**. |
 | Trascrivere un video YouTube | Incolla un URL `youtube.com`, `youtu.be`, `shorts` o `embed`; la lingua selezionata nell’app viene richiesta per prima, con inglese come fallback. |
 | Estrarre testo da un’immagine | Aggiungi PNG, JPG, JPEG, WEBP, BMP o TIFF come un normale file; il risultato contiene una tabella EXIF e la sezione **Testo OCR (PaddleOCR PP-OCRv6 offline)**. |
