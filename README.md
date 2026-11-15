@@ -1,6 +1,6 @@
 # MarkItDown Desktop 1.5.0
 
-**MarkItDown Desktop** è una GUI Windows per trasformare file, documenti con immagini o pagine scansionate, pagine web, sottotitoli YouTube e immagini in file Markdown. Usa il motore open source [MarkItDown di Microsoft][1] come base per i documenti e integra in automatico l'OCR offline multilingua tramite Tesseract 5 incluso nell'app.
+**MarkItDown Desktop** è una GUI Windows per trasformare file, documenti con immagini o pagine scansionate, pagine web, sottotitoli YouTube e immagini in file Markdown. Usa il motore open source [MarkItDown di Microsoft][1] come base per i documenti e integra in automatico l'OCR offline multilingua tramite **PaddleOCR (PP-OCRv6)** con modelli ONNX locali inclusi nell'app.[3]
 
 > Questa è una GUI indipendente basata su MarkItDown; non è un prodotto Microsoft ufficiale e non implica affiliazione con Microsoft.
 
@@ -10,13 +10,13 @@
 | Office e Archivi | Per `.docx`, `.pptx`, `.xlsx`, `.epub` e `.zip`, oltre al testo nativo analizza automaticamente le immagini incorporate ed estrae eventuale testo leggibile in una sezione dedicata (`## Testo OCR da immagini incorporate`). |
 | Link web | Scarica soltanto l’URL incollato dall’utente, rimuove menu, banner cookie, pubblicità e altri elementi non utili, quindi salva il testo principale in Markdown. |
 | YouTube | Recupera titolo e sottotitoli pubblici, generando righe nel formato `[MM:SS] Testo`. |
-| OCR immagini | Legge localmente PNG, JPG, JPEG, WEBP, BMP, TIF e TIFF con Tesseract 5 multilingua incluso nell’app; non usa LLM né API esterne. |
+| OCR immagini | Legge localmente PNG, JPG, JPEG, WEBP, BMP, TIF e TIFF con **PaddleOCR (PP-OCRv6)** multilingua incluso nell’app (`_internal\ocr\ppocrv6`); non usa LLM né API esterne né download da Internet. |
 | EXIF | Riporta formato, risoluzione, modalità colore, DPI e, quando presenti, data e dati della fotocamera. |
 | Output | Scrive un file `.md` UTF-8 per ciascun elemento nella cartella scelta. |
 
 ## Installazione Windows
 
-Esegui `MarkItDown-Desktop-Setup-1.5.0.exe`. Il setup installa l’app, la cartella `_internal` con tutte le librerie, FFmpeg, `pypdfium2` e il motore OCR locale con i modelli multilingua (`ita`, `eng`, `fra`, `deu`, `spa`, `por`, `chi_sim`, `jpn` e `osd`). **Non è necessario installare Python, Tesseract o altre dipendenze.**
+Esegui `MarkItDown-Desktop-Setup-1.5.0.exe`. Il setup installa l’app, la cartella `_internal` con tutte le librerie, FFmpeg, `pypdfium2`, `onnxruntime`, `OpenCV` e i modelli locali **PaddleOCR PP-OCRv6** (`det.onnx`, `rec.onnx`, `rec_dict.json` con dizionario multilingua unificato da 18.708 caratteri). **Non è necessario installare Python, PaddleOCR o altre dipendenze né avere connessione Internet per l'OCR.**
 
 Nel passaggio **Componenti** puoi attivare anche la voce facoltativa del menu contestuale Windows. L’installazione è per l’utente corrente e non richiede privilegi amministrativi.
 
@@ -26,23 +26,22 @@ Apri **MarkItDown Desktop**, scegli una cartella di destinazione, aggiungi uno o
 
 | Azione | Come procedere |
 |---|---|
-| Convertire documenti (con OCR automatico) | Premi **Scegli file** e aggiungi PDF, Word (`.docx`), PowerPoint (`.pptx`), Excel (`.xlsx`), EPUB o ZIP: il testo nativo e il testo nelle immagini vengono estratti automaticamente. |
+| Convertire documenti (con OCR automatico) | Premi **Scegli file** e aggiungi PDF, Word (`.docx`), PowerPoint (`.pptx`), Excel (`.xlsx`), EPUB o ZIP: il testo nativo e il testo nelle immagini vengono estratti automaticamente tramite PaddleOCR locale. |
 | Convertire un articolo | Premi **Link web / YouTube**, incolla l’URL di una pagina e premi **Aggiungi link**. |
 | Trascrivere un video YouTube | Incolla un URL `youtube.com`, `youtu.be`, `shorts` o `embed`; la lingua selezionata nell’app viene richiesta per prima, con inglese come fallback. |
-| Estrarre testo da un’immagine | Aggiungi PNG, JPG, JPEG, WEBP, BMP o TIFF come un normale file; il risultato contiene una tabella EXIF e la sezione **Testo OCR (offline)**. |
+| Estrarre testo da un’immagine | Aggiungi PNG, JPG, JPEG, WEBP, BMP o TIFF come un normale file; il risultato contiene una tabella EXIF e la sezione **Testo OCR (PaddleOCR PP-OCRv6 offline)**. |
 
-## OCR automatico su PDF, Office e immagini (100% offline)
+## OCR automatico con PaddleOCR PP-OCRv6 (100% locale e offline)
 
-L’OCR usa **Tesseract 5** incluso in `_internal\ocr` e i modelli linguistici locali multilingua:
-- **Italiano** (`ita`), **Inglese** (`eng`), **Francese** (`fra`), **Tedesco** (`deu`), **Spagnolo** (`spa`), **Portoghese** (`por`), **Cinese semplificato** (`chi_sim`), **Giapponese** (`jpn`) e rilevamento orientamento/script (`osd`).
+L’OCR utilizza i modelli neurali ufficiali **PaddleOCR PP-OCRv6** (`PP-OCRv6_small_det` per il rilevamento poligonale del testo e `PP-OCRv6_small_rec` per il riconoscimento multilingua) eseguiti localmente tramite **ONNX Runtime** in `_internal\ocr\ppocrv6`:
+- **Supporto multilingua unificato**: Italiano (`it`), Inglese (`en`), Francese (`fr`), Tedesco (`de`), Spagnolo (`es`), Portoghese (`pt`), tutte le lingue latine, Cinese (`ch`) e Giapponese (`japan`) in un unico modello locale senza download runtime.
+- **Rettifica prospettica e ricostruzione layout**: ogni box di testo viene raddrizzato tramite trasformazione prospettica (`warpPerspective`) e ricomposto in righe e paragrafi Markdown ordinati geometricamente.
 
 ### Come funziona sui documenti:
-1. **PDF scansionati o misti**: ogni pagina viene analizzata con `pypdfium2`. Se una pagina contiene meno di 25 caratteri di testo nativo, l’app estrae le immagini della pagina (o renderizza la pagina ad alta definizione) ed esegue l’OCR automatico, contrassegnando la sezione con `## Pagina X *(OCR)*`. Se una pagina è puramente fotografica/illustrativa e non contiene testo leggibile, il rumore visivo viene scartato automaticamente.
+1. **PDF scansionati o misti**: ogni pagina viene analizzata con `pypdfium2`. Se una pagina contiene meno di 25 caratteri di testo nativo, l’app renderizza la pagina ad alta definizione (2×) ed esegue l’OCR automatico con PaddleOCR, contrassegnando la sezione con `## Pagina X *(OCR)*`. Se una pagina è puramente fotografica/illustrativa e non contiene testo leggibile, viene ignorata automaticamente.
 2. **PDF digitali con immagini incorporate**: oltre al testo nativo della pagina, l’app ispeziona gli oggetti immagine incorporati e, se rileva testo aggiuntivo non duplicato, lo aggiunge in `### Testo OCR da immagini (Pagina X)`.
 3. **Documenti Office (`.docx`, `.pptx`, `.xlsx`) ed EPUB/ZIP**: dopo la conversione standard, l’app ispeziona i file multimediali incorporati nel pacchetto (associando anche il numero di slide per i file `.pptx`) e appende la sezione `## Testo OCR da immagini incorporate` quando rileva testo leggibile.
-4. **Immagini singole**: produce una scheda con tabella `## Metadati immagine` (EXIF) e `## Testo OCR (offline)`.
-
-Prima della lettura l'app applica localmente scala di grigi, ridimensionamento adattivo, autocontrasto e miglioramento del contrasto, con filtro anti-rumore sulle righe spurie.[3] [4]
+4. **Immagini singole**: produce una scheda con tabella `## Metadati immagine` (EXIF) e `## Testo OCR (PaddleOCR PP-OCRv6 offline)`.
 
 ## Link web e YouTube
 
@@ -58,8 +57,8 @@ L’app può convertire WAV, MP3, M4A, AAC, AIFF, FLAC, OGG, OPUS, MP4, WEBM, MO
 
 | Funzione | Dati locali | Rete necessaria |
 |---|---|---|
-| Documenti, PDF e Office (con OCR automatico) | Sì | No |
-| OCR immagine ed EXIF | Sì | No |
+| Documenti, PDF e Office (con PaddleOCR automatico) | Sì (modelli ONNX locali in `_internal\ocr\ppocrv6`) | No |
+| OCR immagine ed EXIF | Sì (modelli ONNX locali in `_internal\ocr\ppocrv6`) | No |
 | Conversione di una pagina URL | No, scarica solo la pagina richiesta | Sì |
 | Sottotitoli YouTube | No, recupera solo titolo e sottotitoli pubblici | Sì |
 | Trascrizione audio/video | Audio normalizzato localmente | Sì, perché usa `SpeechRecognition` con il servizio Google |
@@ -82,5 +81,4 @@ MarkItDown è progettato per estrarre contenuto e struttura utile, non per ripro
 
 [1]: https://github.com/microsoft/markitdown "Repository ufficiale Microsoft di MarkItDown"
 [2]: https://pypi.org/project/youtube-transcript-api/ "youtube-transcript-api su PyPI"
-[3]: https://github.com/tesseract-ocr/tessdoc/blob/main/Installation.md "Installazione ufficiale Tesseract"
-[4]: https://github.com/tesseract-ocr/tessdata_fast "Modelli linguistici Tesseract tessdata_fast"
+[3]: https://github.com/PaddlePaddle/PaddleOCR "Repository ufficiale PaddleOCR (PP-OCRv6)"
