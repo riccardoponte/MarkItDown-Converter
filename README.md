@@ -1,3 +1,9 @@
+🌐 **Lingua / Language:** [🇮🇹 Italiano](#italiano) · [🇬🇧 English](#english)
+
+---
+
+<a id="italiano"></a>
+
 # MarkItDown Desktop 1.5.0
 
 **MarkItDown Desktop** è una GUI Windows per trasformare file, documenti con immagini o pagine scansionate, pagine web, sottotitoli YouTube e immagini in file Markdown. Usa il motore open source [MarkItDown di Microsoft][1] come base per i documenti e integra in automatico l'OCR offline multilingua tramite **PaddleOCR (PP-OCRv6)** con modelli ONNX locali inclusi nell'app.[3]
@@ -86,3 +92,96 @@ MarkItDown è progettato per estrarre contenuto e struttura utile, non per ripro
 [1]: https://github.com/microsoft/markitdown "Repository ufficiale Microsoft di MarkItDown"
 [2]: https://pypi.org/project/youtube-transcript-api/ "youtube-transcript-api su PyPI"
 [3]: https://github.com/PaddlePaddle/PaddleOCR "Repository ufficiale PaddleOCR (PP-OCRv6)"
+
+---
+
+<a id="english"></a>
+
+# MarkItDown Desktop 1.5.0
+
+**MarkItDown Desktop** is a Windows GUI for converting files, documents with images or scanned pages, web pages, YouTube subtitles, and images into Markdown files. It uses Microsoft's open-source [MarkItDown][1] engine as the base for documents and automatically integrates offline multilingual OCR via **PaddleOCR (PP-OCRv6)** with local ONNX models bundled in the app.[3]
+
+> This is an independent GUI based on MarkItDown; it is not an official Microsoft product and implies no affiliation with Microsoft.
+
+| Item | Behavior |
+|---|---|
+| Documents and PDFs | Converts the main formats supported by MarkItDown into UTF-8 Markdown and **automatically runs OCR by default** on scanned PDF pages/images and on images embedded within documents. |
+| Office and Archives | For `.docx`, `.pptx`, `.xlsx`, `.epub`, and `.zip`, in addition to native text, it automatically analyzes embedded images and extracts any readable text into a dedicated section (`## Testo OCR da immagini incorporate`). |
+| Web Links | Downloads only the URL pasted by the user, removes menus, cookie banners, advertisements, and other non-essential elements, and then saves the main text in Markdown. |
+| YouTube | Fetches the title and public subtitles, generating lines in the format `[MM:SS] Text`. |
+| Image OCR | Reads PNG, JPG, JPEG, WEBP, BMP, TIF, and TIFF locally with multilingual **PaddleOCR (PP-OCRv6)** bundled in the app (`_internal\ocr\ppocrv6`); does not use LLMs, external APIs, or internet downloads. |
+| EXIF | Reports format, resolution, color mode, DPI, and, when present, date and camera data. |
+| Output | Writes a UTF-8 `.md` file for each item (1:1 mode) or **merges all files in the queue into a single `.md` file** with an automatic table of contents if the option *Merge all files into a single Markdown file (.md)* is enabled. |
+
+## Windows Installation
+
+Run `MarkItDown-Desktop-Setup-1.5.0.exe`. The installer sets up the app, the `_internal` folder with all libraries, FFmpeg, `pypdfium2`, `onnxruntime`, `OpenCV`, and local **PaddleOCR PP-OCRv6** models (`det.onnx`, `rec.onnx`, `rec_dict.json` with a unified multilingual dictionary of 18,708 characters). **No installation of Python, PaddleOCR, or other dependencies is required, nor is an Internet connection needed for OCR.**
+
+In the **Components** step, you can also enable the optional Windows context menu entry. Installation is for the current user and does not require administrator privileges.
+
+## Everyday Usage
+
+Open **MarkItDown Desktop**, choose a destination folder, add one or more items, and click **Convert Files ↗**. OCR always starts automatically when loading images, scanned PDFs, or documents with images inside, without having to enable manual options. The queue continues processing remaining items even if one produces an error. The preview displays the last successfully converted Markdown; if a file with the same name already exists, the app automatically creates `name (2).md`, without overwriting the previous result.
+
+| Action | How to proceed |
+|---|---|
+| Switch mode (**Classic** ↔ **Chatbot**) | Click **⚙ Settings** (or the quick button **💬 Chatbot Mode** / **📋 Classic Mode** in the top right): you can switch instantly from **Classic Mode** (editorial light theme with Queue and Preview) to **Chatbot Mode** (dark theme `#131314` / `#1E1F20` standalone assistant style with chat sidebar, expandable `.md` cards in conversation, and bottom input bar). The choice is saved automatically. |
+| Convert documents (with automatic OCR) | Click **Choose Files** (or **＋ Upload Files** in Chatbot mode) or **drag and drop files and folders directly into the window**: PDF, Word (`.docx`), PowerPoint (`.pptx`), Excel (`.xlsx`), EPUB, or ZIP are converted with automatic extraction of native text and image text via local PaddleOCR. |
+| Merge all files into a single Markdown file | Check **Merge all files into a single Markdown file (.md)** in settings (or click **🔗 Merge all files into a single Markdown (.md)** directly below cards in Chatbot mode): all converted files are collected into a single `.md` document with an initial table of contents. |
+| Inspect or copy preview | In Classic mode, click on any completed row in the **Queue** to view its Markdown in the **Preview** panel; in Chatbot mode, click **👁 Preview** or **📋 Copy** directly on the generated `.md` file card. |
+| Use Portable Web Version | Open `Portable MarkItDown.html` in any modern browser (even via `file://` and without an Internet connection): it includes PDF.js, ONNX Runtime Web, and PaddleOCR in a single monolithic HTML file (~60 MB) with automatic OCR on PDFs, images, and Office (`.docx`, `.pptx`, `.xlsx`, `.epub`). |
+| Convert an article | Click **Web Link / YouTube**, paste a page URL, and click **Add Link**. |
+| Transcribe a YouTube video | Paste a `youtube.com`, `youtu.be`, `shorts`, or `embed` URL; the language selected in the app is queried first, with English as fallback. |
+| Extract text from an image | Add PNG, JPG, JPEG, WEBP, BMP, or TIFF like a normal file; the result contains an EXIF table and the **OCR Text (PaddleOCR PP-OCRv6 offline)** section. |
+
+## Automatic OCR with PaddleOCR PP-OCRv6 (100% Local and Offline)
+
+OCR utilizes the official **PaddleOCR PP-OCRv6** neural models (`PP-OCRv6_small_det` for polygon text detection and `PP-OCRv6_small_rec` for multilingual recognition) executed locally via **ONNX Runtime** in `_internal\ocr\ppocrv6`:
+- **Unified multilingual support**: Italian (`it`), English (`en`), French (`fr`), German (`de`), Spanish (`es`), Portuguese (`pt`), all Latin languages, Chinese (`ch`), and Japanese (`japan`) in a single local model without runtime downloads.
+- **Perspective rectification and layout reconstruction**: each text box is straightened via perspective transformation (`warpPerspective`) and recomposed into geometrically ordered Markdown lines and paragraphs.
+
+### How it works on documents:
+1. **Scanned or mixed PDFs**: each page is analyzed with `pypdfium2`. If a page contains fewer than 25 characters of native text, the app renders the page in high definition (2×) and executes automatic OCR with PaddleOCR, tagging the section with `## Pagina X *(OCR)*`. If a page is purely photographic/illustrative and contains no readable text, it is automatically skipped.
+2. **Digital PDFs with embedded images**: in addition to native page text, the app inspects embedded image objects and, if it detects non-duplicated additional text, adds it under `### Testo OCR da immagini (Pagina X)`.
+3. **Office documents (`.docx`, `.pptx`, `.xlsx`) and EPUB/ZIP**: after standard conversion, the app inspects media files embedded in the package (also associating slide numbers for `.pptx` files) and appends the `## Testo OCR da immagini incorporate` section when readable text is detected.
+4. **Single images**: produces a card with a `## Metadati immagine` (EXIF) table and `## Testo OCR (PaddleOCR PP-OCRv6 offline)`.
+
+## Web Links and YouTube
+
+The **Web Link / YouTube** dialog is a modal window: paste one URL at a time, add it to the queue, and convert it alongside other items. For web pages, the app selects `article`, `main`, or the main content, removing scripts, navigation bars, footers, cookie banners, and common advertisement classes. The result preserves the title, source, and useful text sections.
+
+For YouTube, the app uses `youtube-transcript-api` with the recent `YouTubeTranscriptApi().fetch(...)` syntax and a controlled fallback to the earlier `get_transcript`. The video must have publicly accessible subtitles.[2]
+
+> URL and YouTube conversions require an Internet connection because they retrieve content explicitly pasted by the user. They do not send local files, images, or content to an AI.
+
+## Audio, Video, and Privacy
+
+The app can convert WAV, MP3, M4A, AAC, AIFF, FLAC, OGG, OPUS, MP4, WEBM, MOV, MKV, and AVI. FFmpeg normalizes audio locally; for video, only the sound track is extracted. The **OCR / Audio Language** selector sets the priority language for OCR and speech transcription.
+
+| Feature | Local Data | Network Required |
+|---|---|---|
+| Documents, PDFs, and Office (with automatic PaddleOCR) | Yes (local ONNX models in `_internal\ocr\ppocrv6`) | No |
+| Image OCR and EXIF | Yes (local ONNX models in `_internal\ocr\ppocrv6`) | No |
+| Web URL conversion | No, only downloads the requested page | Yes |
+| YouTube subtitles | No, fetches only public title and subtitles | Yes |
+| Audio/video transcription | Audio normalized locally | Yes, because it uses `SpeechRecognition` with Google service |
+
+## Windows Context Menu
+
+The delivery includes `Install_Context_Menu.ps1` and `Remove_Context_Menu.ps1`. To add the **Convert to Markdown with MarkItDown Desktop** option in the current user's context menu, run in PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Install_Context_Menu.ps1
+```
+
+The script does not install additional software; it only registers the menu entry to open selected files in the app queue.
+
+## Known Limitations
+
+MarkItDown is designed to extract useful content and structure, not to reproduce the original visual appearance of a document.[1] Web pages with paywalls, JavaScript-only content, or anti-bot protections may not be convertible. YouTube videos without public subtitles or subject to network restrictions do not produce transcripts. Local OCR does not interpret charts or complex layouts like a generative vision model: it recognizes printed text within the image.
+
+## References
+
+[1]: https://github.com/microsoft/markitdown "Official Microsoft MarkItDown Repository"
+[2]: https://pypi.org/project/youtube-transcript-api/ "youtube-transcript-api on PyPI"
+[3]: https://github.com/PaddlePaddle/PaddleOCR "Official PaddleOCR Repository (PP-OCRv6)"
